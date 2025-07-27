@@ -7,7 +7,7 @@
  */
 
 import express from 'express';
-import { getUserDetails, login, register } from '../../controllers/auth.controller.js';
+import { checkAdminAccess, getUserDetails, login, logout, register } from '../../controllers/auth.controller.js';
 import { requireAuth } from '../../middlewares/auth.middleware.js';
 
 
@@ -16,8 +16,10 @@ const authRouter = express.Router();
 authRouter.post('/register', register);
 authRouter.post('/login', login);
 authRouter.get('/me', requireAuth, getUserDetails);
+authRouter.post('/logout', requireAuth, logout);
 
 
+authRouter.get('/checkAdmin', requireAuth, checkAdminAccess);
 
 
 export default authRouter;

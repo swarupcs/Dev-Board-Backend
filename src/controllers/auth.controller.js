@@ -108,3 +108,42 @@ export const getUserDetails = asyncHandler(async (req, res) => {
     'User profile fetched successfully'
   ).send(res);
 });
+
+export const logout = asyncHandler(async (req, res) => {
+  const refreshToken = req.cookies?.refreshToken;
+
+  if (refreshToken) {
+    await User.findOneAndUpdate(
+      { refreshToken },
+      { $unset: { refreshToken: '' } },
+      { new: true }
+    );
+
+    clearAuthCookies(res);
+
+    return new ApiResponse(200, null, 'Logged out successfully').send(res);
+  }
+});
+
+
+export const checkAdminAccess = asyncHandler(async (req, res) => {
+  if (req?.user?.role !== 'admin') {
+    throw new ApiError(403, 'Access denied: Admins only');
+  }
+
+  const userDetails = {
+    _id: req.user._id,
+    email: req.user.email,
+    username: req.user.username,
+    fullName: req.user.fullName,
+    role: req.user.role,
+    createdAt: req.user.createdAt,
+  };
+
+  return new ApiResponse(
+    200,
+    userDetails,
+    'Access granted: Admin user',
+    'Admin access check successful'
+  ).send(res);
+});
