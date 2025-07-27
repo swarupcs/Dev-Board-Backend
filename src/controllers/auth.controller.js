@@ -1,5 +1,5 @@
 import { User } from "../models/user.model.js";
-import { registerUser } from "../services/auth.services.js";
+import { issueTokensForUser, registerUser, validateCredentials } from "../services/auth.services.js";
 import { ApiError } from "../utils/api-error.js";
 import { ApiResponse } from "../utils/api-response.js";
 import { asyncHandler} from "../utils/async-handler.js";
@@ -48,4 +48,44 @@ export const register = asyncHandler(async (req, res) => {
         }
     }, 'User registered successfully').send(res);
 
+});
+
+
+export const login = asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    throw new ApiError(400, 'Email and password are required');
+  }
+
+  const user = await validateCredentials(email, password);
+
+  if (!user) {
+    throw new ApiError(401, 'Invalid email or password');
+  }
+
+  const { accessToken, refreshToken } = await issueTokensForUser(user);
+
+  setAuthCookies(res, accessToken, refreshToken);
+
+  return new ApiResponse(
+    200,
+    {
+      user: {
+        _id: user._id,
+        email: user.email,
+        username: user.username,
+        fullName: user.fullName,
+        role: user.role,
+        avatar: user.avatar,
+        createdAt: user.createdAt,
+        isEmailVerified: user.isEmailVerified,
+      },
+      token: {
+        accessToken,
+        refreshToken,
+      },
+    },
+    'Login successful'
+  ).send(res);
 });
