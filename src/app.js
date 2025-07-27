@@ -2,12 +2,18 @@ import express from 'express';
 import cookieParser from 'cookie-parser';
 import { connectDB } from './db/index.js';
 import { PORT } from './config/serverConfig.js';
+import apiRouter from './routes/apiRoutes.js';
+import { globalErrorHandler } from './middlewares/error.middleware.js';
 
 const app = express();
 
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
+
+app.use('/api', apiRouter);
+
+app.use(globalErrorHandler);
 
 connectDB()
   .then(() => {
