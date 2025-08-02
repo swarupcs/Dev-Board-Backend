@@ -1,6 +1,8 @@
+import { ApiKey } from "../models/apiKey.model.js";
 import { User } from "../models/user.model.js";
 import { issueTokensForUser, registerUser, validateCredentials } from "../services/auth.services.js";
 import { ApiError } from "../utils/api-error.js";
+import { generateRawApiKey, hashKey } from "../utils/api-key.js";
 import { ApiResponse } from "../utils/api-response.js";
 import { asyncHandler} from "../utils/async-handler.js";
 import { setAuthCookies } from "../utils/cookies.js";
@@ -145,5 +147,39 @@ export const checkAdminAccess = asyncHandler(async (req, res) => {
     userDetails,
     'Access granted: Admin user',
     'Admin access check successful'
+  ).send(res);
+});
+
+export const generateUserApiKey = asyncHandler(async (req, res) => {
+  const userId = req.user?._id;
+  if (!userId) {
+    throw new ApiError(401, 'Unauthorized: User not found');
+  }
+
+  // ensure no active key exists
+  const existingKey = await ApiKey.findOne({ user: userId, isActive: true });
+  if (existingKey) {
+    throw new ApiError(
+      400,
+      'User already has an active API key. Revoke it first before generating a new one'
+    );
+  }
+
+  // generate raw & hashed
+  const rawKey = generateRawApiKey();
+  const hashed = hashKey(rawKey);
+
+  // create API key doc (store hashed), optional expiresAt can be added
+  await ApiKey.create({
+    user: userId,
+    key: hashed,
+    isActive: true,
+  });
+
+  // send raw key back once
+  return new ApiResponse(
+    201,
+    { apiKey: rawKey },
+    'API key generated successfully'
   ).send(res);
 });
