@@ -1,24 +1,18 @@
-import mongoose, { Schema } from 'mongoose';
+import mongoose from 'mongoose';
 
-const taskSchema = new Schema(
+const taskSchema = new mongoose.Schema(
   {
-    project: {
-      type: Schema.Types.ObjectId,
-      ref: 'Project',
-      required: true,
-      index: true,
-    },
     title: {
       type: String,
       required: true,
       trim: true,
-      maxlength: 250,
+      maxlength: 255,
     },
     description: {
       type: String,
       default: '',
-      maxlength: 2000,
       trim: true,
+      maxlength: 2000,
     },
     status: {
       type: String,
@@ -34,17 +28,16 @@ const taskSchema = new Schema(
       type: Date,
       default: null,
     },
-    assignedTo: {
-      type: Schema.Types.ObjectId,
-      ref: 'User',
-      default: null,
+    project: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Project',
+      required: true,
       index: true,
     },
     isDeleted: {
       type: Boolean,
       default: false,
     },
-    // For bonus: support attachments, comments, etc.
   },
   { timestamps: true }
 );
