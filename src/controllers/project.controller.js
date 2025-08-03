@@ -9,6 +9,7 @@ import { asyncHandler } from "../utils/async-handler.js";
 export const createProject = asyncHandler(async (req, res) => {
   const { name, description } = req.body;
   if (!name) throw new ApiError(400, 'Project name is required');
+  if (!description) throw new ApiError(400, 'Description is required');
 
   const project = await Project.create({
     name,
